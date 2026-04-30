@@ -165,7 +165,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   await order.save();
 
   const isPartial = order.status === 'partial';
-  const isWaiting = order.status === 'waiting';
+  const isWaiting = (order.status as string) === 'waiting';
 
   // Notify sales staff
   await notify({
