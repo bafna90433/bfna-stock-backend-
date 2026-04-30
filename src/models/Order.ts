@@ -23,7 +23,7 @@ export interface IHistoryEvent {
   details?: string;
   by: string;
   role: string;
-  timestamp: Date;
+  timestamp?: Date;
 }
 
 export interface IOrder extends Document {
