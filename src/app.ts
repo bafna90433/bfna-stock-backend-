@@ -50,15 +50,19 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 const seedAdmin = async () => {
-  const adminExists = await User.findOne({ username: 'admin' });
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminName     = process.env.ADMIN_NAME     || 'Super Admin';
+
+  const adminExists = await User.findOne({ username: adminUsername });
   if (!adminExists) {
     await User.create({
-      name: 'Super Admin',
-      username: 'admin',
-      password: 'admin123',
+      name: adminName,
+      username: adminUsername,
+      password: adminPassword,
       role: 'admin',
     });
-    console.log('✅ Default admin created — username: admin, password: admin123');
+    console.log(`✅ Admin created — username: ${adminUsername}`);
   }
 };
 
