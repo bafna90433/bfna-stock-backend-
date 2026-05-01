@@ -56,7 +56,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 router.post('/', upload.single('image'), async (req: AuthRequest, res: Response) => {
   const {
     name, sku, unit,
-    pricePerUnit, wholesalerPrice, retailerPrice,
+    pricePerUnit, wholesalerPrice, retailerPrice, mrp,
     gstRate, description, category, initialQty,
   } = req.body;
 
@@ -82,6 +82,7 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     pricePerUnit: Number(pricePerUnit) || Number(retailerPrice) || 0,
     wholesalerPrice: Number(wholesalerPrice) || 0,
     retailerPrice: Number(retailerPrice) || 0,
+    mrp: Number(mrp) || 0,
   };
 
   const product = await Product.create(productData);
@@ -100,8 +101,7 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ message: 'Product not found' });
 
-  const { name, unit, pricePerUnit, wholesalerPrice, retailerPrice, gstRate, description, category, pcsPerInner, innerPerCarton } = req.body;
-  const isAdmin = req.user?.role === 'admin';
+  const { name, unit, pricePerUnit, wholesalerPrice, retailerPrice, mrp, gstRate, description, category, pcsPerInner, innerPerCarton } = req.body;
 
   if (name) product.name = name;
   if (unit) product.unit = unit;
@@ -111,12 +111,11 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   if (pcsPerInner !== undefined) product.pcsPerInner = Number(pcsPerInner) || 1;
   if (innerPerCarton !== undefined) product.innerPerCarton = Number(innerPerCarton) || 1;
 
-  // Only admin can change prices
-  if (isAdmin) {
-    if (pricePerUnit !== undefined) product.pricePerUnit = Number(pricePerUnit);
-    if (wholesalerPrice !== undefined) product.wholesalerPrice = Number(wholesalerPrice);
-    if (retailerPrice !== undefined) product.retailerPrice = Number(retailerPrice);
-  }
+  // All roles can change prices
+  if (pricePerUnit !== undefined) product.pricePerUnit = Number(pricePerUnit);
+  if (wholesalerPrice !== undefined) product.wholesalerPrice = Number(wholesalerPrice);
+  if (retailerPrice !== undefined) product.retailerPrice = Number(retailerPrice);
+  if (mrp !== undefined) product.mrp = Number(mrp);
 
   if (req.file) {
     if (product.imageFileId) await deleteFromImageKit(product.imageFileId);

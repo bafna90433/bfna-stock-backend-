@@ -7,8 +7,9 @@ export interface IProduct extends Document {
   imageFileId: string;
   unit: 'inner' | 'box' | 'pcs';
   pricePerUnit: number;        // legacy / fallback
-  wholesalerPrice: number;     // admin-set wholesaler price
-  retailerPrice: number;       // admin-set retailer price
+  wholesalerPrice: number;     // wholesaler price
+  retailerPrice: number;       // retailer price
+  mrp: number;                 // maximum retail price (optional)
   gstRate: number;             // optional, default 0
   description: string;
   category: string;
@@ -28,6 +29,7 @@ const ProductSchema = new Schema<IProduct>({
   pricePerUnit: { type: Number, default: 0 },
   wholesalerPrice: { type: Number, default: 0 },
   retailerPrice: { type: Number, default: 0 },
+  mrp: { type: Number, default: 0 },
   gstRate: { type: Number, default: 0 },
   pcsPerInner: { type: Number, default: 1, min: 1 },
   innerPerCarton: { type: Number, default: 1, min: 1 },
