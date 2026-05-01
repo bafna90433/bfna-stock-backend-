@@ -71,8 +71,7 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     imageFileId = result.fileId;
   }
 
-  // Only admin can set prices. Stock manager creates product with 0 price.
-  const isAdmin = req.user?.role === 'admin';
+  // All roles (admin + stock_manager) can set prices
   const productData: any = {
     name, sku, imageUrl, imageFileId, unit,
     description, category,
@@ -80,16 +79,10 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     pcsPerInner: Number(req.body.pcsPerInner) || 1,
     innerPerCarton: Number(req.body.innerPerCarton) || 1,
     createdBy: req.user?._id,
+    pricePerUnit: Number(pricePerUnit) || Number(retailerPrice) || 0,
+    wholesalerPrice: Number(wholesalerPrice) || 0,
+    retailerPrice: Number(retailerPrice) || 0,
   };
-  if (isAdmin) {
-    productData.pricePerUnit = Number(pricePerUnit) || 0;
-    productData.wholesalerPrice = Number(wholesalerPrice) || 0;
-    productData.retailerPrice = Number(retailerPrice) || 0;
-  } else {
-    productData.pricePerUnit = 0;
-    productData.wholesalerPrice = 0;
-    productData.retailerPrice = 0;
-  }
 
   const product = await Product.create(productData);
 
