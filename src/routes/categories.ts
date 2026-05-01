@@ -44,15 +44,19 @@ router.post('/', requireRole('admin', 'stock_manager'), async (req: AuthRequest,
 // PUT /api/categories/:id - update category
 router.put('/:id', requireRole('admin', 'stock_manager'), async (req: AuthRequest, res: Response) => {
   const { name, description, isActive } = req.body;
-  
+
   try {
     const category = await Category.findById(req.params.id);
     if (!category) return res.status(404).json({ message: 'Category not found' });
 
-    if (name && name.toLowerCase() !== category.name.toLowerCase()) {
-      const existing = await Category.findOne({ name: new RegExp(`^${name}$`, 'i') });
+    if (name && name.trim() !== category.name) {
+      // Allow case-only changes (KEYCHAIN → Keychain). Only block truly duplicate names.
+      const existing = await Category.findOne({
+        name: new RegExp(`^${name.trim()}$`, 'i'),
+        _id: { $ne: req.params.id },
+      });
       if (existing) return res.status(400).json({ message: 'Category name already exists' });
-      category.name = name;
+      category.name = name.trim();
     }
 
     if (description !== undefined) category.description = description;
@@ -65,14 +69,11 @@ router.put('/:id', requireRole('admin', 'stock_manager'), async (req: AuthReques
   }
 });
 
-// DELETE /api/categories/:id - soft delete category
+// DELETE /api/categories/:id - permanently delete category
 router.delete('/:id', requireRole('admin', 'stock_manager'), async (req: AuthRequest, res: Response) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findByIdAndDelete(req.params.id);
     if (!category) return res.status(404).json({ message: 'Category not found' });
-
-    category.isActive = false;
-    await category.save();
     res.json({ message: 'Category deleted successfully' });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
