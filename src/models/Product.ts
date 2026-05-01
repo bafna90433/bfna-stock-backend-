@@ -8,8 +8,9 @@ export interface IProduct extends Document {
   unit: 'inner' | 'box' | 'pcs';
   pricePerUnit: number;        // legacy / fallback
   wholesalerPrice: number;     // wholesaler price
+  wholesalerMrp: number;       // wholesaler MRP
   retailerPrice: number;       // retailer price
-  mrp: number;                 // maximum retail price (optional)
+  retailerMrp: number;         // retailer MRP
   gstRate: number;             // optional, default 0
   description: string;
   category: string;
@@ -28,8 +29,9 @@ const ProductSchema = new Schema<IProduct>({
   unit: { type: String, enum: ['inner', 'box', 'pcs'], default: 'pcs' },
   pricePerUnit: { type: Number, default: 0 },
   wholesalerPrice: { type: Number, default: 0 },
+  wholesalerMrp: { type: Number, default: 0 },
   retailerPrice: { type: Number, default: 0 },
-  mrp: { type: Number, default: 0 },
+  retailerMrp: { type: Number, default: 0 },
   gstRate: { type: Number, default: 0 },
   pcsPerInner: { type: Number, default: 1, min: 1 },
   innerPerCarton: { type: Number, default: 1, min: 1 },

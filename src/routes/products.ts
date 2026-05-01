@@ -56,13 +56,14 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 router.post('/', upload.single('image'), async (req: AuthRequest, res: Response) => {
   const {
     name, sku, unit,
-    pricePerUnit, wholesalerPrice, retailerPrice, mrp,
+    pricePerUnit, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp,
     gstRate, description, category, initialQty,
   } = req.body;
 
   if (!wholesalerPrice || Number(wholesalerPrice) <= 0) return res.status(400).json({ message: 'Wholesaler Price is required' });
+  if (!wholesalerMrp || Number(wholesalerMrp) <= 0) return res.status(400).json({ message: 'Wholesaler MRP is required' });
   if (!retailerPrice || Number(retailerPrice) <= 0) return res.status(400).json({ message: 'Retailer Price is required' });
-  if (!mrp || Number(mrp) <= 0) return res.status(400).json({ message: 'MRP is required' });
+  if (!retailerMrp || Number(retailerMrp) <= 0) return res.status(400).json({ message: 'Retailer MRP is required' });
 
   const existing = await Product.findOne({ sku: sku?.toUpperCase() });
   if (existing) return res.status(400).json({ message: 'SKU already exists' });
@@ -85,8 +86,9 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     createdBy: req.user?._id,
     pricePerUnit: Number(pricePerUnit) || Number(retailerPrice) || 0,
     wholesalerPrice: Number(wholesalerPrice) || 0,
+    wholesalerMrp: Number(wholesalerMrp) || 0,
     retailerPrice: Number(retailerPrice) || 0,
-    mrp: Number(mrp) || 0,
+    retailerMrp: Number(retailerMrp) || 0,
   };
 
   const product = await Product.create(productData);
@@ -105,7 +107,7 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ message: 'Product not found' });
 
-  const { name, unit, pricePerUnit, wholesalerPrice, retailerPrice, mrp, gstRate, description, category, pcsPerInner, innerPerCarton } = req.body;
+  const { name, unit, pricePerUnit, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp, gstRate, description, category, pcsPerInner, innerPerCarton } = req.body;
 
   if (name) product.name = name;
   if (unit) product.unit = unit;
@@ -118,8 +120,9 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   // All roles can change prices
   if (pricePerUnit !== undefined) product.pricePerUnit = Number(pricePerUnit);
   if (wholesalerPrice !== undefined) product.wholesalerPrice = Number(wholesalerPrice);
+  if (wholesalerMrp !== undefined) product.wholesalerMrp = Number(wholesalerMrp);
   if (retailerPrice !== undefined) product.retailerPrice = Number(retailerPrice);
-  if (mrp !== undefined) product.mrp = Number(mrp);
+  if (retailerMrp !== undefined) product.retailerMrp = Number(retailerMrp);
 
   if (req.file) {
     if (product.imageFileId) await deleteFromImageKit(product.imageFileId);
