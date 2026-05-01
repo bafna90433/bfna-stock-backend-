@@ -10,6 +10,7 @@ export interface IProduct extends Document {
   wholesalerBillPrice: number; // purchase/bill price from wholesaler
   wholesalerPrice: number;     // selling price to wholesaler
   wholesalerMrp: number;       // wholesaler MRP
+  bulkPricingTiers: Array<{ minQty: number; price: number }>; // bulk discount tiers
   retailerPrice: number;       // selling price to retailer
   retailerMrp: number;         // retailer MRP
   gstRate: number;             // optional, default 0
@@ -32,6 +33,10 @@ const ProductSchema = new Schema<IProduct>({
   wholesalerBillPrice: { type: Number, default: 0 },
   wholesalerPrice: { type: Number, default: 0 },
   wholesalerMrp: { type: Number, default: 0 },
+  bulkPricingTiers: [{
+    minQty: { type: Number, required: true, min: 1 },
+    price: { type: Number, required: true, min: 0 },
+  }],
   retailerPrice: { type: Number, default: 0 },
   retailerMrp: { type: Number, default: 0 },
   gstRate: { type: Number, default: 0 },

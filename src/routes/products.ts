@@ -57,7 +57,7 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
   const {
     name, sku, unit,
     pricePerUnit, wholesalerBillPrice, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp,
-    gstRate, description, category, initialQty,
+    gstRate, description, category, initialQty, bulkPricingTiers,
   } = req.body;
 
   if (!wholesalerPrice || Number(wholesalerPrice) <= 0) return res.status(400).json({ message: 'Wholesaler Price is required' });
@@ -88,6 +88,12 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     wholesalerBillPrice: Number(wholesalerBillPrice) || 0,
     wholesalerPrice: Number(wholesalerPrice) || 0,
     wholesalerMrp: Number(wholesalerMrp) || 0,
+    bulkPricingTiers: (() => {
+      try {
+        const tiers = typeof bulkPricingTiers === 'string' ? JSON.parse(bulkPricingTiers) : (bulkPricingTiers || []);
+        return tiers.filter((t: any) => t.minQty > 0 && t.price >= 0);
+      } catch { return []; }
+    })(),
     retailerPrice: Number(retailerPrice) || 0,
     retailerMrp: Number(retailerMrp) || 0,
   };
@@ -108,7 +114,7 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ message: 'Product not found' });
 
-  const { name, unit, pricePerUnit, wholesalerBillPrice, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp, gstRate, description, category, pcsPerInner, innerPerCarton } = req.body;
+  const { name, unit, pricePerUnit, wholesalerBillPrice, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp, gstRate, description, category, pcsPerInner, innerPerCarton, bulkPricingTiers } = req.body;
 
   if (name) product.name = name;
   if (unit) product.unit = unit;
@@ -123,6 +129,12 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   if (wholesalerBillPrice !== undefined) product.wholesalerBillPrice = Number(wholesalerBillPrice);
   if (wholesalerPrice !== undefined) product.wholesalerPrice = Number(wholesalerPrice);
   if (wholesalerMrp !== undefined) product.wholesalerMrp = Number(wholesalerMrp);
+  if (bulkPricingTiers !== undefined) {
+    try {
+      const tiers = typeof bulkPricingTiers === 'string' ? JSON.parse(bulkPricingTiers) : bulkPricingTiers;
+      product.bulkPricingTiers = tiers.filter((t: any) => t.minQty > 0 && t.price >= 0);
+    } catch { /* keep existing */ }
+  }
   if (retailerPrice !== undefined) product.retailerPrice = Number(retailerPrice);
   if (retailerMrp !== undefined) product.retailerMrp = Number(retailerMrp);
 
