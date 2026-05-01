@@ -60,6 +60,10 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     gstRate, description, category, initialQty,
   } = req.body;
 
+  if (!wholesalerPrice || Number(wholesalerPrice) <= 0) return res.status(400).json({ message: 'Wholesaler Price is required' });
+  if (!retailerPrice || Number(retailerPrice) <= 0) return res.status(400).json({ message: 'Retailer Price is required' });
+  if (!mrp || Number(mrp) <= 0) return res.status(400).json({ message: 'MRP is required' });
+
   const existing = await Product.findOne({ sku: sku?.toUpperCase() });
   if (existing) return res.status(400).json({ message: 'SKU already exists' });
 
