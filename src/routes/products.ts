@@ -56,7 +56,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 router.post('/', upload.single('image'), async (req: AuthRequest, res: Response) => {
   const {
     name, sku, unit,
-    pricePerUnit, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp,
+    pricePerUnit, wholesalerBillPrice, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp,
     gstRate, description, category, initialQty,
   } = req.body;
 
@@ -85,6 +85,7 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     innerPerCarton: Number(req.body.innerPerCarton) || 1,
     createdBy: req.user?._id,
     pricePerUnit: Number(pricePerUnit) || Number(retailerPrice) || 0,
+    wholesalerBillPrice: Number(wholesalerBillPrice) || 0,
     wholesalerPrice: Number(wholesalerPrice) || 0,
     wholesalerMrp: Number(wholesalerMrp) || 0,
     retailerPrice: Number(retailerPrice) || 0,
@@ -107,7 +108,7 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ message: 'Product not found' });
 
-  const { name, unit, pricePerUnit, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp, gstRate, description, category, pcsPerInner, innerPerCarton } = req.body;
+  const { name, unit, pricePerUnit, wholesalerBillPrice, wholesalerPrice, wholesalerMrp, retailerPrice, retailerMrp, gstRate, description, category, pcsPerInner, innerPerCarton } = req.body;
 
   if (name) product.name = name;
   if (unit) product.unit = unit;
@@ -119,6 +120,7 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
 
   // All roles can change prices
   if (pricePerUnit !== undefined) product.pricePerUnit = Number(pricePerUnit);
+  if (wholesalerBillPrice !== undefined) product.wholesalerBillPrice = Number(wholesalerBillPrice);
   if (wholesalerPrice !== undefined) product.wholesalerPrice = Number(wholesalerPrice);
   if (wholesalerMrp !== undefined) product.wholesalerMrp = Number(wholesalerMrp);
   if (retailerPrice !== undefined) product.retailerPrice = Number(retailerPrice);

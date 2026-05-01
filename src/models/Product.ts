@@ -7,9 +7,10 @@ export interface IProduct extends Document {
   imageFileId: string;
   unit: 'inner' | 'box' | 'pcs';
   pricePerUnit: number;        // legacy / fallback
-  wholesalerPrice: number;     // wholesaler price
+  wholesalerBillPrice: number; // purchase/bill price from wholesaler
+  wholesalerPrice: number;     // selling price to wholesaler
   wholesalerMrp: number;       // wholesaler MRP
-  retailerPrice: number;       // retailer price
+  retailerPrice: number;       // selling price to retailer
   retailerMrp: number;         // retailer MRP
   gstRate: number;             // optional, default 0
   description: string;
@@ -28,6 +29,7 @@ const ProductSchema = new Schema<IProduct>({
   imageFileId: { type: String, default: '' },
   unit: { type: String, enum: ['inner', 'box', 'pcs'], default: 'pcs' },
   pricePerUnit: { type: Number, default: 0 },
+  wholesalerBillPrice: { type: Number, default: 0 },
   wholesalerPrice: { type: Number, default: 0 },
   wholesalerMrp: { type: Number, default: 0 },
   retailerPrice: { type: Number, default: 0 },
