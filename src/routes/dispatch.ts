@@ -47,17 +47,9 @@ router.get('/order/:orderId', async (req: AuthRequest, res: Response) => {
       const pcsPerInner  = item.pcsPerInner    || 0;
       const hasStockBreakdown = stockCartons > 0 || stockInners > 0 || stockLoose > 0;
 
-      let effectiveAvailable = availableQty; // default: total pcs
-
-      if ((item.cartonQty || 0) > 0 && pcsPerCarton > 0 && hasStockBreakdown) {
-        // Carton packaging defined AND breakdown saved → use carton stock only
-        effectiveAvailable = stockCartons * pcsPerCarton;
-      } else if ((item.innerQty || 0) > 0 && pcsPerInner > 0 && hasStockBreakdown) {
-        // Inner packaging defined AND breakdown saved → use inner + loose stock
-        effectiveAvailable = (stockInners * pcsPerInner) + stockLoose;
-      }
-      // Otherwise fall back to total availableQty
-      // (covers: no packaging rate defined, or no breakdown saved yet)
+      let effectiveAvailable = availableQty; // Flexible: use total pieces for all units
+      
+      // Unit-aware checks can be done on the frontend using the provided stockCartons/Inners/Loose
 
       let stockStatus = 'available';
       if (remaining <= 0) stockStatus = 'completed';
@@ -108,11 +100,43 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
     const stock = await Stock.findOne({ productId: item.productId });
     if (!stock) continue;
-    if (stock.availableQty < item.qtyDispatched) {
-      return res.status(400).json({ message: `Insufficient stock for ${item.productName}` });
-    }
+
+    // Total deduction
     stock.availableQty -= item.qtyDispatched;
     stock.totalOutward += item.qtyDispatched;
+
+    // --- Bin-aware Deduction Logic ---
+    let rem = item.qtyDispatched;
+    const ppi = item.pcsPerInner || 0;
+    const ppc = item.innerPerCarton || 0; // Total pieces in a carton
+
+    // 1. Deduct from Loose bin
+    const dLoose = Math.min(stock.stockLoose, rem);
+    stock.stockLoose -= dLoose;
+    rem -= dLoose;
+
+    // 2. If still need pieces, break Inners
+    if (rem > 0 && ppi > 0) {
+      while (rem > 0 && stock.stockInners > 0) {
+        stock.stockInners -= 1;
+        stock.stockLoose += ppi;
+        const d = Math.min(stock.stockLoose, rem);
+        stock.stockLoose -= d;
+        rem -= d;
+      }
+    }
+
+    // 3. If still need pieces, break Cartons
+    if (rem > 0 && ppc > 0) {
+      while (rem > 0 && stock.stockCartons > 0) {
+        stock.stockCartons -= 1;
+        stock.stockLoose += ppc;
+        const d = Math.min(stock.stockLoose, rem);
+        stock.stockLoose -= d;
+        rem -= d;
+      }
+    }
+
     stock.lastUpdated = new Date();
     await stock.save();
   }
