@@ -81,8 +81,8 @@ router.post('/', upload.single('image'), async (req: AuthRequest, res: Response)
     name, sku, imageUrl, imageFileId, unit,
     description, category,
     gstRate: Number(gstRate) || 0,
-    pcsPerInner: Number(req.body.pcsPerInner) || 1,
-    innerPerCarton: Number(req.body.innerPerCarton) || 1,
+    pcsPerInner: Number(req.body.pcsPerInner) || 0,
+    innerPerCarton: Number(req.body.innerPerCarton) || 0,
     createdBy: req.user?._id,
     pricePerUnit: Number(pricePerUnit) || Number(retailerPrice) || 0,
     wholesalerBillPrice: Number(wholesalerBillPrice) || 0,
@@ -121,8 +121,8 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
   if (description !== undefined) product.description = description;
   if (category) product.category = category;
   if (gstRate !== undefined) product.gstRate = Number(gstRate);
-  if (pcsPerInner !== undefined) product.pcsPerInner = Number(pcsPerInner) || 1;
-  if (innerPerCarton !== undefined) product.innerPerCarton = Number(innerPerCarton) || 1;
+  if (pcsPerInner !== undefined) product.pcsPerInner = Number(pcsPerInner) || 0;
+  if (innerPerCarton !== undefined) product.innerPerCarton = Number(innerPerCarton) || 0;
 
   // All roles can change prices
   if (pricePerUnit !== undefined) product.pricePerUnit = Number(pricePerUnit);
