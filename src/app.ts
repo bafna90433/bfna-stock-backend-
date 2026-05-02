@@ -24,7 +24,7 @@ const app = express();
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({
-  origin: ['https://stock.bafnadaily.com', 'https://bfna-stock-frontend.pages.dev', 'http://localhost:3000', 'http://localhost:5173'],
+  origin: ['https://bafnastock.bafnadaily.com', 'https://stock.bafnadaily.com', 'https://bfna-stock-frontend.pages.dev', 'http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
