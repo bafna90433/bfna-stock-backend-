@@ -7,6 +7,9 @@ export interface IStock extends Document {
   totalInward: number;
   totalOutward: number;
   lastUpdated: Date;
+  stockCartons: number;
+  stockInners: number;
+  stockLoose: number;
 }
 
 const StockSchema = new Schema<IStock>({
@@ -16,6 +19,9 @@ const StockSchema = new Schema<IStock>({
   totalInward: { type: Number, default: 0 },
   totalOutward: { type: Number, default: 0 },
   lastUpdated: { type: Date, default: Date.now },
+  stockCartons: { type: Number, default: 0 },
+  stockInners: { type: Number, default: 0 },
+  stockLoose: { type: Number, default: 0 },
 }, { timestamps: true });
 
 export default mongoose.model<IStock>('Stock', StockSchema);

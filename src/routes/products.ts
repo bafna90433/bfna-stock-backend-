@@ -151,11 +151,16 @@ router.put('/:id', upload.single('image'), async (req: AuthRequest, res: Respons
 
 // PATCH /api/products/:id/stock - add/remove stock
 router.patch('/:id/stock', async (req: AuthRequest, res: Response) => {
-  const { qty, operation } = req.body; // operation: 'add' | 'remove'
+  const { qty, operation, cartons, inners, loose } = req.body; // operation: 'add' | 'remove' | 'set'
   const stock = await Stock.findOne({ productId: req.params.id });
   if (!stock) return res.status(404).json({ message: 'Stock not found' });
 
-  if (operation === 'add') {
+  if (operation === 'set') {
+    const diff = Number(qty) - stock.availableQty;
+    if (diff > 0) stock.totalInward += diff;
+    else if (diff < 0) stock.totalOutward += Math.abs(diff);
+    stock.availableQty = Number(qty);
+  } else if (operation === 'add') {
     stock.availableQty += Number(qty);
     stock.totalInward += Number(qty);
   } else if (operation === 'remove') {
@@ -163,6 +168,11 @@ router.patch('/:id/stock', async (req: AuthRequest, res: Response) => {
     stock.availableQty -= Number(qty);
     stock.totalOutward += Number(qty);
   }
+
+  if (cartons !== undefined) stock.stockCartons = Number(cartons);
+  if (inners !== undefined) stock.stockInners = Number(inners);
+  if (loose !== undefined) stock.stockLoose = Number(loose);
+
   stock.lastUpdated = new Date();
   await stock.save();
 

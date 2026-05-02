@@ -227,4 +227,11 @@ router.patch('/:id/verify', async (req: AuthRequest, res: Response) => {
   res.json({ message: 'Dispatch verified successfully', dispatch });
 });
 
+// GET /api/dispatch/:id - get single dispatch by id (must be LAST to avoid shadowing named routes)
+router.get('/:id', async (req: AuthRequest, res: Response) => {
+  const dispatch = await Dispatch.findById(req.params.id).lean();
+  if (!dispatch) return res.status(404).json({ message: 'Dispatch not found' });
+  res.json(dispatch);
+});
+
 export default router;
