@@ -37,16 +37,40 @@ router.get('/order/:orderId', async (req: AuthRequest, res: Response) => {
       const remaining = item.qtyOrdered - (item.qtyDispatched || 0);
       const stock = await Stock.findOne({ productId: item.productId });
       const availableQty = stock?.availableQty || 0;
-      
+      const stockCartons = stock?.stockCartons || 0;
+      const stockInners  = stock?.stockInners  || 0;
+      const stockLoose   = stock?.stockLoose   || 0;
+
+      // Unit-aware effective available qty
+      // Use 0 (not 1) so we detect "no packaging rate defined"
+      const pcsPerCarton = item.innerPerCarton || 0;
+      const pcsPerInner  = item.pcsPerInner    || 0;
+      const hasStockBreakdown = stockCartons > 0 || stockInners > 0 || stockLoose > 0;
+
+      let effectiveAvailable = availableQty; // default: total pcs
+
+      if ((item.cartonQty || 0) > 0 && pcsPerCarton > 0 && hasStockBreakdown) {
+        // Carton packaging defined AND breakdown saved → use carton stock only
+        effectiveAvailable = stockCartons * pcsPerCarton;
+      } else if ((item.innerQty || 0) > 0 && pcsPerInner > 0 && hasStockBreakdown) {
+        // Inner packaging defined AND breakdown saved → use inner + loose stock
+        effectiveAvailable = (stockInners * pcsPerInner) + stockLoose;
+      }
+      // Otherwise fall back to total availableQty
+      // (covers: no packaging rate defined, or no breakdown saved yet)
+
       let stockStatus = 'available';
       if (remaining <= 0) stockStatus = 'completed';
-      else if (availableQty <= 0) stockStatus = 'no_stock';
-      else if (availableQty < remaining) stockStatus = 'partial';
+      else if (effectiveAvailable <= 0) stockStatus = 'no_stock';
+      else if (effectiveAvailable < remaining) stockStatus = 'partial';
 
       return {
         ...item,
         remainingQty: remaining,
-        availableQty,
+        availableQty: effectiveAvailable,
+        stockCartons,
+        stockInners,
+        stockLoose,
         stockStatus
       };
     })
